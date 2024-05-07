@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot</title>
+</head>
+<body>
+    <h1>Chatbot</h1>
+    <form method="POST">
+        <label for="prompt">Enter Prompt:</label><br>
+        <input type="text" id="prompt" name="prompt"><br>
+        <label for="model">Select Model:</label><br>
+        <select id="model" name="model">
+            <option value="llama3">Model 1</option>
+        </select><br><br>
+        <button type="submit">Submit</button>
+    </form>
+
+    {% if content %}
+        <h2>Response:</h2>
+        <p>{{ content }}</p>
+    {% endif %}
+</body>
+</html>
