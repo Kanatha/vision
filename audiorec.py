@@ -1,17 +1,12 @@
 from flask import Flask, render_template, request
 from faster_whisper import WhisperModel
 import os
-import requests
-import json
 
 app = Flask(__name__)
 
 # Initialize the model outside of the route functions
 model_size = "tiny"
 model = WhisperModel(model_size, device="cuda", compute_type="float16")
-
-# Chatbot API URL
-chatbot_api_url = "http://localhost:11434/api/chat"
 
 @app.route('/')
 def index():
@@ -37,39 +32,9 @@ def upload():
         for segment in segments:
             transcribed_text += "[%.2fs -> %.2fs] %s\n" % (segment.start, segment.end, segment.text)
 
-        print("Transcribed text:")
         print(transcribed_text)
 
-        # Make a request to the chatbot API
-        payload = {
-            "model": "llama3",  # Update with the appropriate model name
-            "messages": [{
-                "role": "user",
-                "content": transcribed_text  # Pass transcribed text to the chatbot
-            }],
-            "stream": False,
-            "keep_alive": -1
-        }
-        
-        headers = {
-            "Content-Type": "application/json"
-        }
-
-        response = requests.post(chatbot_api_url, data=json.dumps(payload), headers=headers)
-
-        if response.status_code == 200:
-            try:
-                returned_json = response.json()
-                message = returned_json.get("message", {})
-                content = message.get("content", "")
-                print("Chatbot response:")
-                print(content)
-            except json.JSONDecodeError as e:
-                print("Error decoding JSON response: " + str(e))
-        else:
-            print("Error: " + str(response.status_code) + " " + response.text)
-
-        return 'Audio transcribed successfully and chatbot response printed to console.'
+        return 'Audio transcribed successfully:\n' + transcribed_text
 
     finally:
         # Ensure the file is closed before deletion

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Record Audio</title>
+</head>
+<body>
+    <h1>Record Audio</h1>
+    <button id="recordButton">Start Recording</button>
+    <button id="stopButton" disabled>Stop Recording</button>
+    <button id="submitButton">Submit</button>
+
+    <script>
+        let audioChunks = [];
+        let recorder;
+
+        const recordButton = document.getElementById('recordButton');
+        const stopButton = document.getElementById('stopButton');
+        const submitButton = document.getElementById('submitButton');
+
+        recordButton.addEventListener('click', startRecording);
+        stopButton.addEventListener('click', stopRecording);
+        submitButton.addEventListener('click', submitAudio);
+
+        function startRecording() {
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(stream => {
+                    recorder = new MediaRecorder(stream);
+                    recorder.ondataavailable = e => {
+                        audioChunks.push(e.data);
+                    };
+                    recorder.start();
+                    recordButton.disabled = true;
+                    stopButton.disabled = false;
+                })
+                .catch(console.error);
+        }
+
+        function stopRecording() {
+            recorder.stop();
+            recordButton.disabled = false;
+            stopButton.disabled = true;
+        }
+
+        function submitAudio() {
+            const audioBlob = new Blob(audioChunks, { 'type': 'audio/wav' });
+            const formData = new FormData();
+            formData.append('audio_data', audioBlob, 'recorded_audio.wav');
+
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (response.ok) {
+                    console.log('Audio uploaded successfully!');
+                } else {
+                    console.error('Error uploading audio:', response.statusText);
+                }
+            })
+            .catch(console.error);
+            
+            // Reset audioChunks after submission
+            audioChunks = [];
+        }
+    </script>
+</body>
+</html>

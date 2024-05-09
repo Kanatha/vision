@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Transcription</title>
+</head>
+<body>
+    <h1>Voice Transcription</h1>
+    <button id="startRecording">Start Recording</button>
+    <button id="stopRecording" disabled>Stop Recording</button>
+    <div id="transcription"></div>
+
+    <script>
+        let startRecordingButton = document.getElementById('startRecording');
+        let stopRecordingButton = document.getElementById('stopRecording');
+        let transcriptionDiv = document.getElementById('transcription');
+        let recorder;
+
+        startRecordingButton.addEventListener('click', async () => {
+            startRecordingButton.disabled = true;
+            stopRecordingButton.disabled = false;
+
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            const mediaRecorder = new MediaRecorder(stream);
+            const chunks = [];
+
+            mediaRecorder.addEventListener('dataavailable', (e) => {
+                chunks.push(e.data);
+            });
+
+            mediaRecorder.addEventListener('stop', () => {
+                const blob = new Blob(chunks, { type: 'audio/wav' });
+                const formData = new FormData();
+                formData.append('audio_data', blob);
+
+                fetch('/transcribe', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.text())
+                .then(transcription => {
+                    transcriptionDiv.innerText = transcription;
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            });
+
+            mediaRecorder.start();
+            recorder = mediaRecorder;
+        });
+
+        stopRecordingButton.addEventListener('click', () => {
+            startRecordingButton.disabled = false;
+            stopRecordingButton.disabled = true;
+
+            recorder.stop();
+        });
+    </script>
+</body>
+</html>
