@@ -3,6 +3,7 @@ from faster_whisper import WhisperModel
 import os
 import requests
 import json
+import tts
 
 app = Flask(__name__)
 
@@ -45,7 +46,7 @@ def upload():
             "model": "llama3",  # Update with the appropriate model name
             "messages": [{
                 "role": "user",
-                "content": transcribed_text  # Pass transcribed text to the chatbot
+                "content": transcribed_text.split('] ')[-1]  # Pass transcribed text to the chatbot
             }],
             "stream": False,
             "keep_alive": -1
@@ -64,6 +65,7 @@ def upload():
                 content = message.get("content", "")
                 print("Chatbot response:")
                 print(content)
+                tts.play_text_as_audio(content)
             except json.JSONDecodeError as e:
                 print("Error decoding JSON response: " + str(e))
         else:
